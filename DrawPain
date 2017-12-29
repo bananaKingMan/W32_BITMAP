@@ -1,0 +1,127 @@
+#include <windows.h>
+#include <WTypes.h>
+HINSTANCE g_hInstance = 0; // 用来接收当前程序实例句柄
+void  DrawPit(HDC hdc)
+{
+	//SetPixel(hdc, 100, 100, RGB(255, 255, 0));
+	for (int i = 0; i < 256; i++)
+	{
+		for (int j = 0; j < 256; j++)
+		{
+			SetPixel(hdc, 100+i, 100+j, RGB(255,j, i));
+		}
+	}
+}
+void DrawLine(HDC hdc)
+{
+	MoveToEx(hdc, 100, 100, NULL);
+	LineTo(hdc, 300, 300);
+	LineTo(hdc, 300, 100);
+	LineTo(hdc, 100, 100);
+}
+void  DrawRect(HDC hdc)
+{
+	Rectangle(hdc, 300, 300, 600, 600);
+	RoundRect(hdc, 300, 600, 600, 900, 50, 50);
+}
+void  DrawEll(HDC hdc)
+{
+	Ellipse(hdc, 100, 100, 300, 300);
+	//Ellipse(hdc, 100, 300, 400, 800);
+}
+void DrawArc(HDC hdc)
+{
+	Arc(hdc, 100, 100, 200, 400, 50, 50, 300, 400);
+}
+void  onPaint(HWND hWnd)
+{
+	PAINTSTRUCT ps = {0};
+	HDC hdc = BeginPaint(hWnd, &ps);
+	//HBRUSH hBrush =  CreateSolidBrush(RGB(200, 0, 200));
+	//HGDIOBJ nOldPen= SelectObject(hdc, hBrush);
+	//1.创建
+	HPEN hPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+	HGDIOBJ hBrush = GetStockObject(NULL_BRUSH);
+	//2.应用
+
+	HGDIOBJ nOldPen = SelectObject(hdc,hPen);
+	//绘图
+	//DrawPit(hdc); //绘点
+	//DrawLine(hdc); //绘线
+	//DrawRect(hdc); //绘矩形
+	DrawEll(hdc); //绘圆
+	//DrawArc(hdc); //绘弧线
+	//4.取回画笔
+	SelectObject(hdc, nOldPen);
+	//5.释放画笔
+	DeleteObject(hPen);
+
+	EndPaint(hWnd, &ps);
+}
+//2.窗口处理函数
+LRESULT CALLBACK WndProc(HWND hWnd, UINT msgID, WPARAM wParam, LPARAM lparam)
+{
+	switch(msgID)
+	{
+	case  WM_PAINT:
+		onPaint(hWnd);
+		break;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	}
+	return DefWindowProc(hWnd, msgID, wParam, lparam);//给各种消息进行默认处理
+}
+//注册窗口类
+void Register(LPSTR lpClassName, WNDPROC)
+{
+	WNDCLASSEX wce = {0};
+	wce.cbSize = sizeof(wce);//结构体大小
+	wce.cbClsExtra = 0;//窗口类附加数缓冲区
+	wce.cbWndExtra = 0;//窗口附加数据缓冲区
+	wce.hbrBackground = CreateSolidBrush(RGB(150, 220, 150));//(HBRUSH) (COLOR_WINDOW + 3);//背景颜色
+	wce.hIcon = NULL;//图标
+	wce.hCursor = NULL;//鼠标
+	wce.hIconSm = NULL;//大图标
+	wce.hInstance = g_hInstance;//句柄
+	wce.lpfnWndProc = WndProc;//调用程序
+	wce.lpszClassName = lpClassName;//窗口名字
+	wce.lpszMenuName = NULL;//菜单
+	wce.style = CS_HREDRAW|CS_HREDRAW;//窗口风格
+	RegisterClassEx(&wce);
+}
+//4.创建窗口
+HWND CreateMain(LPSTR lpClassName, LPSTR lpWndName)
+{
+	HWND hWnd = CreateWindowEx(0, lpClassName, lpWndName, WS_OVERLAPPEDWINDOW, 100, 100, 700, 500, NULL, NULL, g_hInstance, NULL);
+	return hWnd;
+}
+//5.显示窗口
+void Display(HWND hWnd)
+{
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+	////刷新窗口，不调用也没有关系，但是官网推荐调用
+
+}
+//6.显示循环
+void Message()
+{
+	MSG nMsg = {0};
+	while(GetMessage(&nMsg, NULL,0, 0))
+	{
+		TranslateMessage(&nMsg);
+		DispatchMessage(&nMsg);
+	}
+}
+//1.入口函数
+int CALLBACK WinMain(HINSTANCE hIns, HINSTANCE hPreIns, LPSTR lpCmdLine, int nCmdShow)
+{
+	g_hInstance  = hIns;
+	Register("Main", WndProc);
+	HWND hWnd = CreateMain("Main", "Window");
+	Display(hWnd);
+	Message();
+	return 0;
+}
+
